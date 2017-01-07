@@ -1,0 +1,4 @@
+$ echo -e 'https://golang.org\nhttps://golang.org\nhttps://golang.org\n
+https://habrahabr.ru/post/195574/\nhttps://golang.org\nhttps://golang.org\n
+https://golang.org\nhttps://golang.org\nhttps://golang.org\n
+https://golang.org\nhttps://golang.org'
