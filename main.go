@@ -40,12 +40,16 @@ func main() {
 //Переходим по url'у и считаем кол - во искомых строк
 func countStrings(url string, count *int, goryt *int, wg *sync.WaitGroup) {
 	*goryt++
-	response, _ := http.Get(url)
+	response, err := http.Get(url)
 	defer response.Body.Close()
-	s, _ := ioutil.ReadAll(response.Body)
-	fmt.Print("Count for " + string(url) + ": ")
-	fmt.Println(strings.Count(string(s), "Go"))
-	*count += strings.Count(string(s), "Go")
+	if err != nil {
+		fmt.Println("You can not go to url")
+	} else {
+		s, _ := ioutil.ReadAll(response.Body)
+		fmt.Print("Count for " + string(url) + ": ")
+		fmt.Println(strings.Count(string(s), "Go"))
+		*count += strings.Count(string(s), "Go")
+	}
 	*goryt--
 	wg.Done()
 }
@@ -70,24 +74,28 @@ func initializationUrl(line string, num int, c chan string) {
 }
 
 func readFile(c chan string) {
-	file, _ := os.Open("input.txt")
-	f := bufio.NewReader(file)
-	check := false
-	// Считываем строки с файла и отправляем их на разбор url'ов
-	for {
-		line, err := f.ReadString('\n')
-		line = strings.Replace(line, "\r\n'", "", -1)
-		line = strings.Replace(line, "'", "", -1)
-		if check == false {
-			initializationUrl(line, 10, c) // если первая строка, то сразу игнорируем "$ echo -e "
-			check = true
-		} else {
-			initializationUrl(line, 0, c)
+	file, err := os.Open("input.txt")
+	if err != nil {
+		fmt.Println("File not found")
+	} else {
+		f := bufio.NewReader(file)
+		check := false
+		// Считываем строки с файла и отправляем их на разбор url'ов
+		for {
+			line, err := f.ReadString('\n')
+			line = strings.Replace(line, "\r\n'", "", -1)
+			line = strings.Replace(line, "'", "", -1)
+			if check == false {
+				initializationUrl(line, 10, c) // если первая строка, то сразу игнорируем "$ echo -e "
+				check = true
+			} else {
+				initializationUrl(line, 0, c)
+
+			}
+			if err != nil {
+				break
+			}
 
 		}
-		if err != nil {
-			break
-		}
-
 	}
 }
