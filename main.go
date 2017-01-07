@@ -2,11 +2,11 @@
 package main
 
 import (
-	"bufio"
+	//"bufio"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
+	//	"os"
 	"strings"
 	"sync"
 )
@@ -20,7 +20,7 @@ func main() {
 		wg        sync.WaitGroup
 	)
 	ch := make(chan string) // Канал, в котором хранятся url
-	go readFile(ch)
+	go readData(ch)
 	for num := range ch {
 		if gorytines < k {
 			wg.Add(1)
@@ -35,6 +35,7 @@ func main() {
 
 	fmt.Print("Total: ")
 	fmt.Println(count)
+
 }
 
 //Переходим по url'у и считаем кол - во искомых строк
@@ -54,12 +55,14 @@ func countStrings(url string, count *int, goryt *int, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-func initializationUrl(line string, num int, c chan string) {
+func readData(c chan string) {
+	AllUrl := ""
+	fmt.Scanln(&AllUrl)
 	s := ""
 	// Считываем посимвольно строку пока не встретим "/n" и отправляем в канал
-	for i := num; i < len(line); i++ {
-		if line[i] != 92 {
-			s += string(line[i])
+	for i := 0; i < len(AllUrl); i++ {
+		if AllUrl[i] != 92 {
+			s += string(AllUrl[i])
 		} else {
 			c <- string(s)
 			s = ""
@@ -70,32 +73,5 @@ func initializationUrl(line string, num int, c chan string) {
 	if len(s) > 5 {
 		c <- string(s)
 		close(c)
-	}
-}
-
-func readFile(c chan string) {
-	file, err := os.Open("input.txt")
-	if err != nil {
-		fmt.Println("File not found")
-	} else {
-		f := bufio.NewReader(file)
-		check := false
-		// Считываем строки с файла и отправляем их на разбор url'ов
-		for {
-			line, err := f.ReadString('\n')
-			line = strings.Replace(line, "\r\n'", "", -1)
-			line = strings.Replace(line, "'", "", -1)
-			if check == false {
-				initializationUrl(line, 10, c) // если первая строка, то сразу игнорируем "$ echo -e "
-				check = true
-			} else {
-				initializationUrl(line, 0, c)
-
-			}
-			if err != nil {
-				break
-			}
-
-		}
 	}
 }
