@@ -2,11 +2,9 @@
 package main
 
 import (
-	//"bufio"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	//	"os"
 	"strings"
 	"sync"
 )
@@ -24,11 +22,21 @@ func main() {
 	for num := range ch {
 		if gorytines < k {
 			wg.Add(1)
-			go countStrings(num, &count, &gorytines, &wg)
+			go func() {
+				gorytines++
+				if countStrings(num, &count, &wg) == true {
+					gorytines--
+				}
+			}()
 		} else { // Если кол - во горутин больше заданного ждем пока они выполнятся и запускаем снова
 			wg.Wait()
 			wg.Add(1)
-			go countStrings(num, &count, &gorytines, &wg)
+			go func() {
+				gorytines++
+				if countStrings(num, &count, &wg) == true {
+					gorytines--
+				}
+			}()
 		}
 	}
 	wg.Wait() // Ждем выполнения всех горутин
@@ -39,20 +47,20 @@ func main() {
 }
 
 //Переходим по url'у и считаем кол - во искомых строк
-func countStrings(url string, count *int, goryt *int, wg *sync.WaitGroup) {
-	*goryt++
+func countStrings(url string, count *int, wg *sync.WaitGroup) bool {
 	response, err := http.Get(url)
-	defer response.Body.Close()
+
 	if err != nil {
 		fmt.Println("You can not go to url")
 	} else {
+		defer response.Body.Close()
 		s, _ := ioutil.ReadAll(response.Body)
 		fmt.Print("Count for " + string(url) + ": ")
 		fmt.Println(strings.Count(string(s), "Go"))
 		*count += strings.Count(string(s), "Go")
 	}
-	*goryt--
 	wg.Done()
+	return true
 }
 
 func readData(c chan string) {
